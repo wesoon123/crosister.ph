@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crosister | by: Nikka</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
+    <script src="server.mjs"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>emailjs.init("j17XET_AvuYGpKwjj"); </script>
+</head>
+<body x-data="{ openMenu: false }" :style="openMenu ? 'overflow: hidden;' : 'overflow:visible;'">
+    <header>
+        <button class="mobile-menu-button" @click="openMenu = !openMenu" :aria-expanded="openMenu" aria-controls="mobile-navigation" aria-label="Navigation Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 50 50">
+                <path d="M 0 7.5 L 0 12.5 L 50 12.5 L 50 7.5 Z M 0 22.5 L 0 27.5 L 50 27.5 L 50 22.5 Z M 0 37.5 L 0 42.5 L 50 42.5 L 50 37.5 Z"></path>
+                </svg>
+            <span>Menu</span>
+        </button>
+        <nav class="menu">
+            
+            <a href="./index.html">HOME</a>
+            <a href="#">ABOUT</a>
+            <a href="#">LATEST</a>
+            <img width="100px" src="./img/logo.png"/>
+            <a href="./costumize.html">COSTUMIZE</a>
+            <a href="#">CONTACTS</a>
+            <a href="#">SIGN IN</a>
+        </nav>
+        
+        <div class="hero">
+            <h1>Crosister</h1>
+            <button>Join Now</button>
+        </div>
+    </header>
+    <div id="mobile-navigation" class="mobile-menu" x-show="openMenu" x-transition>
+        <ul>
+            <li><a href="#">HOME</a></li>
+            <li><a href="#">ABOUT</a></li>
+            <li><a href="#">LATEST</a></li>
+            <li><a href="#">ORDER</a></li>
+            <li><a href="#">CONTACTS</a></li>
+            <li><a href="#">SIGN IN</a></li>
+        </ul>
+        <button @click="openMenu = !openMenu" class="button-close" :aria-expanded="openMenu" aria-controls="mobile-navigation" aria-label="Close Navigation Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 50 50">
+                <path d="M 9.15625 6.3125 L 6.3125 9.15625 L 22.15625 25 L 6.21875 40.96875 L 9.03125 43.78125 L 25 27.84375 L 40.9375 43.78125 L 43.78125 40.9375 L 27.84375 25 L 43.6875 9.15625 L 40.84375 6.3125 L 25 22.15625 Z"></path>
+                </svg>
+        </button>
+    </div>
+   
+      <main x-data="orderModal()">
+        <h1>NEW ARRIVAL</h1>
+            <section class="item">
+                <div class="item-list">
+                    <div class="thumbnail">
+                        <img src="./img/img16.jpeg"/>
+                    </div>
+                    <div class="item-description">
+                        <h3>Lily of the Valley</h3>
+                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                        <h4>2000 PHP</h4>
+                        <button @click="openModal('Lily of the Valley', 2000)">Made to order</button>
+                       
+                    </div>
+                </div>
+                <div class="item-list">
+                    <div class="thumbnail">
+                        <img src="./img/img17.jpeg"/>
+                    </div>
+                    <div class="item-description">
+                        <h3>Sunflower</h3>
+                        <p>Lorem ipsum dolor sit amet .</p>
+                        <h4>2000 PHP</h4>
+                        <button @click="openModal('Sunflower', 2000)">Made to order</button>
+                        
+                    </div>
+                </div>
+                <div class="item-list">
+                    <div class="thumbnail">
+                        <img src="./img/img14.jpeg"/>
+                    </div>
+                    <div class="item-description">
+                        <h3>Rose</h3>
+                        <p>Lorem ipsum dolor sit amet consectetur.</p>
+                        <h4>2000 PHP</h4>
+                        <button @click="openModal('Rose', 2000)">Made to order</button>
+                       
+                    </div>
+                </div>
+                <div class="item-list">
+                    <div class="thumbnail">
+                        <img src="./img/img11.jpeg"/>
+                    </div>
+                    <div class="item-description">
+                        <h3>Rose Blue</h3>
+                        <p>Lorem ipsum dolor consectetur adipisicing elit.</p>
+                        <h4>2000 PHP</h4>
+                        <button @click="openModal('Rose Blue', 2000)">Made to order</button>
+                        
+                    </div>
+                </div>
+                <div x-cloak x-show="isOpen" class="modal-overlay modal-open">
+                    <div class="modal">
+                        <button @click="closeModal" class="close-btn">&#10006;</button>
+                        <h2>Made to Order</h2>
+                        <p><strong>Item:</strong> <span x-text="itemName"></span></p>
+                        <p><strong>Price:</strong> <span x-text="itemPrice"></span> PHP</p>
+                
+                        <label>How Much Order:</label>
+                        <input type="number" x-model.number="orderQuantity" min="1" required @input="calculateTotal">
+                
+                        <p><strong>Total Price:</strong> <span x-text="totalPrice"></span> PHP</p>
+                
+                        <form @submit.prevent="payWithPayMongo">
+                            <label>Name:</label>
+                            <input type="text" x-model="customerName" required>
+                
+                            <label>Contact Number:</label>
+                            <input type="text" x-model="customerNumber" required>
+                
+                            <label>Delivery Address:</label>
+                            <input type="text" x-model="address" required>
+                
+                            <label>Delivery Date (at least 1 week ahead):</label>
+                            <input type="date" x-model="deliveryDate" @input="validateDate" min="">
+                
+                            <label>Email (for progress updates):</label>
+                            <input type="email" x-model="email" required>
+                
+                            <button type="submit" class="pay-btn">
+                                Pay with PayMongo
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+            </section>
+            <div x-show="notification" x-transition
+                    :class="notificationType === 'success' ? 'success' : 'error'"
+                    class="notification">
+                    <span x-text="notificationMessage"></span>
+            </div>   
+            </section>
+            <section x-cloak class="feature-item" x-data="{ 
+                currentImage: './img/img10.jpeg', 
+                images: {
+                    'Streetwear': './img/img19.jpeg',
+                    'Preppy fashion': './img/img10.jpeg',
+                    'Boho-chic': './img/img11.jpeg',
+                    'Casual': './img/img12.jpeg',
+                    'Bohemian': './img/img13.jpeg',
+                    'Minimalist': './img/img14.jpeg'
+                },
+                fade: false
+                }">
+            <!-- Image Display -->
+            <div class="model">
+                <img :src="currentImage" alt="Fashion Image" 
+                    :class="{ 'fade-out': fade, 'fade-in': !fade }"
+                    @transitionend="fade = false">
+            </div>
+        
+            <!-- Buttons to Change Image -->
+            <div class="feature-list">
+                <template x-for="(image, name) in images" :key="name">
+                    <button @click="fade = true; setTimeout(() => currentImage = image, 400);" x-text="name"></button>
+                </template>
+            </div>
+            </section>
+            <section class="more-feature">
+                <h1>LATEST DESIGN</h1>
+                <div class="feature-grid">
+                    <div class="more-feature-list"><img src="./img/img02.jpg"/></div> 
+                    <div class="more-feature-list"><img src="./img/img03.jpg"/></div>
+                    <div class="more-feature-list"><img src="./img/img04.jpg"/></div>
+                    <div class="more-feature-list"><img src="./img/img05.jpg"/></div>
+                    <div class="more-feature-list"><img src="./img/img06.jpg"/></div>
+                    <div class="more-feature-list"><img src="./img/img07.jpg"/></div>
+                    <div class="more-feature-list"><img src="./img/img08.jpg"/></div>
+                </div>
+            </section>
+
+            <section class="our-services">
+                <h1>OUR SERVICES</h1>
+                <div class="our-services-grid">
+                    <img src="./img/img09.jpg">
+                    <div class="our-services-descriptions">
+                        <p><b>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eveniet cumque consectetur obcaecati.</b></p>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eveniet cumque consectetur obcaecati. Ratione numquam fugiat quisquam eum! At, rerum. Nulla nostrum voluptate sit cupiditate laborum aliquid libero quis dolor. Cum.</p>
+                        <div class="feature-text">
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eveniet cumque consectetur obcaecati.</p>
+                        </div>
+                        <p class="highlight">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eveniet cumque consectetur obcaecati. Ratione numquam fugiat quisquam eum! At, rerum.</p>
+                        <h4>Goals and Mission</h4>
+                        <ul>
+                            <li>improving customer experience</li>
+                            <li>being a responsible corporate citizen</li>
+                            <li>high-quality clothing</li>
+                            <li>To be a global leader in fashion</li>
+                            <li>well-constructed clothing</li>
+                            <li>To be recognized for functional design and fit</li>
+                            <li>To be committed to sustainable growth</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+      </main>
+      <footer>
+        <h1>Crosister</h1>
+        <div class="footer-menu">
+            <a href="">Home</a>
+            <a href="">Contacts</a>
+            <a href="">Design</a>
+            <a href="">Email Us</a>
+            <a href="">Social Media</a>
+        </div>
+        <div class="email-form">
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+            <form>
+                <input type="email" class="email-input" placeholder="Enter your email" required>
+                <button type="submit" class="email-submit"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
+                    <g fill="#f4f3f3" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><g transform="scale(5.12,5.12)"><path d="M33.40625,0c-0.55078,0.05078 -0.95703,0.54297 -0.90625,1.09375c0.05078,0.55078 0.54297,0.95703 1.09375,0.90625h12.96875l-20.875,20.90625c-0.29687,0.24219 -0.43359,0.62891 -0.34766,1.00391c0.08594,0.37109 0.37891,0.66406 0.75,0.75c0.375,0.08594 0.76172,-0.05078 1.00391,-0.34766l20.90625,-20.875v12.96875c-0.00391,0.35938 0.18359,0.69531 0.49609,0.87891c0.3125,0.17969 0.69531,0.17969 1.00781,0c0.3125,-0.18359 0.5,-0.51953 0.49609,-0.87891v-16.40625h-16.40625c-0.03125,0 -0.0625,0 -0.09375,0c-0.03125,0 -0.0625,0 -0.09375,0zM2,10c-0.52344,0 -1.05859,0.18359 -1.4375,0.5625c-0.37891,0.37891 -0.5625,0.91406 -0.5625,1.4375v36c0,0.52344 0.18359,1.05859 0.5625,1.4375c0.37891,0.37891 0.91406,0.5625 1.4375,0.5625h36c0.52344,0 1.05859,-0.18359 1.4375,-0.5625c0.37891,-0.37891 0.5625,-0.91406 0.5625,-1.4375v-30c0.00391,-0.35937 -0.18359,-0.69531 -0.49609,-0.87891c-0.3125,-0.17969 -0.69531,-0.17969 -1.00781,0c-0.3125,0.18359 -0.5,0.51953 -0.49609,0.87891v30h-36v-36h30c0.35938,0.00391 0.69531,-0.18359 0.87891,-0.49609c0.17969,-0.3125 0.17969,-0.69531 0,-1.00781c-0.18359,-0.3125 -0.51953,-0.5 -0.87891,-0.49609z"></path></g></g>
+                    </svg></button>
+              </form>
+              <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+              <div class="social-media-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
+                    <g fill="#ffffff" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><g transform="scale(5.12,5.12)"><path d="M25,3c-12.13844,0 -22,9.86156 -22,22c0,11.01913 8.12753,20.13835 18.71289,21.72852l1.14844,0.17383v-17.33594h-5.19727v-3.51953h5.19727v-4.67383c0,-2.87808 0.69065,-4.77363 1.83398,-5.96289c1.14334,-1.18926 2.83269,-1.78906 5.18359,-1.78906c1.87981,0 2.61112,0.1139 3.30664,0.19922v2.88086h-2.44727c-1.38858,0 -2.52783,0.77473 -3.11914,1.80664c-0.59131,1.03191 -0.77539,2.264 -0.77539,3.51953v4.01758h6.12305l-0.54492,3.51953h-5.57812v17.36523l1.13477,-0.1543c10.73582,-1.45602 19.02148,-10.64855 19.02148,-21.77539c0,-12.13844 -9.86156,-22 -22,-22zM25,5c11.05756,0 20,8.94244 20,20c0,9.72979 -6.9642,17.7318 -16.15625,19.5332v-12.96875h5.29297l1.16211,-7.51953h-6.45508v-2.01758c0,-1.03747 0.18982,-1.96705 0.50977,-2.52539c0.31994,-0.55834 0.62835,-0.80078 1.38477,-0.80078h4.44727v-6.69141l-0.86719,-0.11719c-0.59979,-0.08116 -1.96916,-0.27148 -4.43945,-0.27148c-2.7031,0 -5.02334,0.73635 -6.625,2.40234c-1.60166,1.66599 -2.39258,4.14669 -2.39258,7.34961v2.67383h-5.19727v7.51953h5.19727v12.9043c-9.04433,-1.91589 -15.86133,-9.84626 -15.86133,-19.4707c0,-11.05756 8.94244,-20 20,-20z"></path></g></g>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
+                    <g fill="#ffffff" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><g transform="scale(5.12,5.12)"><path d="M16,3c-7.16752,0 -13,5.83248 -13,13v18c0,7.16752 5.83248,13 13,13h18c7.16752,0 13,-5.83248 13,-13v-18c0,-7.16752 -5.83248,-13 -13,-13zM16,5h18c6.08648,0 11,4.91352 11,11v18c0,6.08648 -4.91352,11 -11,11h-18c-6.08648,0 -11,-4.91352 -11,-11v-18c0,-6.08648 4.91352,-11 11,-11zM37,11c-1.10457,0 -2,0.89543 -2,2c0,1.10457 0.89543,2 2,2c1.10457,0 2,-0.89543 2,-2c0,-1.10457 -0.89543,-2 -2,-2zM25,14c-6.06329,0 -11,4.93671 -11,11c0,6.06329 4.93671,11 11,11c6.06329,0 11,-4.93671 11,-11c0,-6.06329 -4.93671,-11 -11,-11zM25,16c4.98241,0 9,4.01759 9,9c0,4.98241 -4.01759,9 -9,9c-4.98241,0 -9,-4.01759 -9,-9c0,-4.98241 4.01759,-9 9,-9z"></path></g></g>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">
+                    <g fill="#ffffff" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><g transform="scale(5.12,5.12)"><path d="M9,4c-2.74952,0 -5,2.25048 -5,5v32c0,2.74952 2.25048,5 5,5h32c2.74952,0 5,-2.25048 5,-5v-32c0,-2.74952 -2.25048,-5 -5,-5zM9,6h32c1.66848,0 3,1.33152 3,3v32c0,1.66848 -1.33152,3 -3,3h-32c-1.66848,0 -3,-1.33152 -3,-3v-32c0,-1.66848 1.33152,-3 3,-3zM14,11.01172c-1.09522,0 -2.08078,0.32736 -2.81055,0.94141c-0.72977,0.61405 -1.17773,1.53139 -1.17773,2.51367c0,1.86718 1.61957,3.32281 3.67969,3.4668c0.0013,0.00065 0.0026,0.0013 0.00391,0.00195c0.09817,0.03346 0.20099,0.05126 0.30469,0.05273c2.27301,0 3.98828,-1.5922 3.98828,-3.52148c-0.00018,-0.01759 -0.00083,-0.03518 -0.00195,-0.05274c-0.10175,-1.90023 -1.79589,-3.40234 -3.98633,-3.40234zM14,12.98828c1.39223,0 1.94197,0.62176 2.00195,1.50391c-0.01215,0.85625 -0.54186,1.51953 -2.00195,1.51953c-1.38541,0 -2.01172,-0.70949 -2.01172,-1.54492c0,-0.41771 0.15242,-0.7325 0.47266,-1.00195c0.32023,-0.26945 0.83428,-0.47656 1.53906,-0.47656zM11,19c-0.55226,0.00006 -0.99994,0.44774 -1,1v19c0.00006,0.55226 0.44774,0.99994 1,1h6c0.55226,-0.00006 0.99994,-0.44774 1,-1v-5.86523v-13.13477c-0.00006,-0.55226 -0.44774,-0.99994 -1,-1zM20,19c-0.55226,0.00006 -0.99994,0.44774 -1,1v19c0.00006,0.55226 0.44774,0.99994 1,1h6c0.55226,-0.00006 0.99994,-0.44774 1,-1v-10c0,-0.82967 0.22639,-1.65497 0.625,-2.19531c0.39861,-0.54035 0.90147,-0.86463 1.85742,-0.84766c0.98574,0.01695 1.50758,0.35464 1.90234,0.88477c0.39477,0.53013 0.61523,1.32487 0.61523,2.1582v10c0.00006,0.55226 0.44774,0.99994 1,1h6c0.55226,-0.00006 0.99994,-0.44774 1,-1v-10.73828c0,-2.96154 -0.87721,-5.30739 -2.38086,-6.89453c-1.50365,-1.58714 -3.59497,-2.36719 -5.80664,-2.36719c-2.10202,0 -3.70165,0.70489 -4.8125,1.42383v-0.42383c-0.00006,-0.55226 -0.44774,-0.99994 -1,-1zM12,21h4v12.13477v4.86523h-4zM21,21h4v1.56055c0.00013,0.43 0.27511,0.81179 0.68291,0.94817c0.40781,0.13638 0.85714,-0.00319 1.11591,-0.34661c0,0 1.57037,-2.16211 5.01367,-2.16211c1.75333,0 3.25687,0.58258 4.35547,1.74219c1.0986,1.15961 1.83203,2.94607 1.83203,5.51953v9.73828h-4v-9c0,-1.16667 -0.27953,-2.37289 -1.00977,-3.35352c-0.73023,-0.98062 -1.9584,-1.66341 -3.47266,-1.68945c-1.52204,-0.02703 -2.77006,0.66996 -3.50195,1.66211c-0.73189,0.99215 -1.01562,2.21053 -1.01562,3.38086v9h-4z"></path></g></g>
+                    </svg>
+              </div>
+          </div>
+      </footer>
+      
+</body>
+</html>
