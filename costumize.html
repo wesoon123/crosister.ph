@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crosister | Costumize</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="script.js"></script>
+    <script src="costumize.js"></script>
     <script src="server.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>emailjs.init("j17XET_AvuYGpKwjj"); </script>
 </head>
 <body x-data="{ openMenu: false }" :style="openMenu ? 'overflow: hidden;' : 'overflow:visible;'">
@@ -28,7 +26,7 @@
             <a href="#">LATEST</a>
             <img width="100px" src="./img/logo.png"/>
             <a href="./costumize.html">COSTUMIZE</a>
-            <a href="#">CONTACTS</a>
+            <a href="./product.html">PRODUCT</a>
             <a href="#">SIGN IN</a>
         </nav>
         
@@ -39,12 +37,12 @@
     </header>
     <div id="mobile-navigation" class="mobile-menu" x-show="openMenu" x-transition>
         <ul>
-            <li><a href="#">HOME</a></li>
-            <li><a href="#">ABOUT</a></li>
-            <li><a href="#">LATEST</a></li>
-            <li><a href="#">ORDER</a></li>
-            <li><a href="#">CONTACTS</a></li>
-            <li><a href="#">SIGN IN</a></li>
+            <a href="./index.html">HOME</a>
+            <a href="#">ABOUT</a>
+            <a href="#">LATEST</a>
+            <a href="./costumize.html">COSTUMIZE</a>
+            <a href="./product.html">PRODUCT</a>
+            <a href="#">SIGN IN</a>
         </ul>
         <button @click="openMenu = !openMenu" class="button-close" :aria-expanded="openMenu" aria-controls="mobile-navigation" aria-label="Close Navigation Menu">
             <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 50 50">
@@ -53,7 +51,7 @@
         </button>
     </div>
    
-      <main x-data="orderModal()">
+      <main>
         <h1>Costumize your own design</h1>
         <div class="customizer" x-data="customizer()">
             <!-- Buttons -->
@@ -76,7 +74,7 @@
                     </template>
                 </select>
                 <div class="color-preview" x-show="selectedItem" :style="{ backgroundColor: selectedColor || 'transparent' }"></div>
-
+        
                 <!-- Size Option -->
                 <label>Size:</label>
                 <select x-model="selectedSize" x-show="selectedItem">
@@ -86,7 +84,7 @@
                         </template>
                     </template>
                 </select>
-
+        
                 <!-- Pattern Option -->
                 <label>Pattern:</label>
                 <select x-model="selectedPattern" x-show="selectedItem">
@@ -102,18 +100,18 @@
                 <input type="number" x-model="quantity" min="1" class="input-box" required>
                 
                 <h2>Information and Delivery Address</h2>
-
+        
                 <!-- Name -->
                 <label>Full Name:</label>
                 <input type="text" x-model="contactName" class="input-box" required>
-
+        
                 <label>Address:</label>
                 <input type="text" x-model="contactAddress" class="input-box" required>
-
+        
                 <!-- Contact Number -->
                 <label>Contact Number:</label>
                 <input type="text" x-model="contactNumber" class="input-box" required>
-
+        
                 <label>Email:</label>
                 <input type="text" x-model="contactEmail" class="input-box" required>
             
@@ -124,8 +122,11 @@
                 <!-- Submit Button -->
                 <button @click="submitCustomization" class="submit-btn">Submit</button>
             </div>
-            
+        
+            <!-- Toast Notification -->
+            <div x-show="showToast" class="toast-notification" x-text="toastMessage" x-cloak></div>
         </div>
+        
       </main>
       <footer>
         <h1>Crosister</h1>
@@ -137,7 +138,7 @@
             <a href="">Social Media</a>
         </div>
         <div class="email-form">
-            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+            <p>Be a part of out team now subscribe to our service</p>
             <form>
                 <input type="email" class="email-input" placeholder="Enter your email" required>
                 <button type="submit" class="email-submit"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0,0,256,256">

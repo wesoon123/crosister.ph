@@ -895,3 +895,19 @@ input {
   border-radius: 5px;
   border: 1px solid #ccc;
 }
+
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: none;
+}
+
+[x-show="showToast"] {
+  display: block;
+}
