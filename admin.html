@@ -3,109 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Orders</title>
+    <title>Admin Panel</title>
+    <!-- Load Firebase config -->
+    <script type="module" src="firebase-config.js"></script>
+    <!-- Load your application code -->
+    <script type="module" src="admin.js"></script>
+    <!-- Load Alpine.js LAST -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <style>
-        .order-container {
-            max-width: 600px;
-            margin: auto;
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
-        .order-item {
-            background: white;
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        h2 {
+            background-color: #f2f2f2;
             padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
         }
-        .order-header {
-            cursor: pointer;
-            font-weight: bold;
+        .loading {
             padding: 10px;
-            background: #ddd;
-            border-radius: 5px;
-        }
-        .delete-btn {
-            background: red;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 3px;
+            font-style: italic;
+            color: #666;
         }
     </style>
 </head>
-<body x-data="{
-    orders: JSON.parse(localStorage.getItem('adminOrders')) || [],
-    deleteOrder(index) {
-        this.orders.splice(index, 1);
-        localStorage.setItem('adminOrders', JSON.stringify(this.orders));
-    }
-}">
-    
-    <div class="order-container">
-        <h2>Admin Order List</h2>
-        <template x-if="orders.length === 0">
-            <p>No orders yet.</p>
-        </template>
-        <template x-for="(order, index) in orders" :key="index">
-            <div class="order-item" x-data="{ open: false }">
-                <div class="order-header" @click="open = !open">
-                    Order Number: <span x-text="order.cusNumber"></span>
-                </div>
-                <div x-show="open" x-collapse>
-                    <p><strong>Item:</strong> <span x-text="order.item"></span></p>
-                    <p><strong>Color:</strong> <span x-text="order.color"></span></p>
-                    <p><strong>Size:</strong> <span x-text="order.size"></span></p>
-                    <p><strong>Pattern:</strong> <span x-text="order.pattern"></span></p>
-                    <p><strong>Quantity:</strong> <span x-text="order.quantity"></span></p>
-                    <p><strong>Name:</strong> <span x-text="order.contactName"></span></p>
-                    <p><strong>Address:</strong> <span x-text="order.contactAddress"></span></p>
-                    <p><strong>Contact:</strong> <span x-text="order.contactNumber"></span></p>
-                    <p><strong>Email:</strong> <span x-text="order.contactEmail"></span></p>
-                    <p><strong>Delivery Date:</strong> <span x-text="order.cusdeliveryDate"></span></p>
-                    <button class="delete-btn" @click="deleteOrder(index)">Delete</button>
-                </div>
-            </div>
-        </template>
+<body x-data="adminPanel()">
+    <h2>Costumize Orders</h2>
+    <div x-show="!orders.length" class="loading">Loading orders...</div>
+    <table border="1" x-show="orders.length">
+        <thead>
+            <tr>
+                <th>Order No</th>
+                <th>Order Date</th>
+                <th>Item</th>
+                <th>Pattern</th>
+                <th>Quantity</th>
+                <th>Color</th>
+                <th>Size</th>
+                <th>Contact Name</th>
+                <th>Delivery Date</th>
+                <th>Contact Email</th>
+                <th>Contact Number</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template x-for="order in orders" :key="order.id">
+                <tr>
+                    <td x-text="order.cusNumber"></td>
+                    <td x-text="order.orderDate"></td>
+                    <td x-text="order.item"></td>
+                    <td x-text="order.pattern"></td>
+                    <td x-text="order.quantity"></td>
+                    <td x-text="order.color"></td>
+                    <td x-text="order.size"></td>
+                    <td x-text="order.contactName"></td>
+                    <td x-text="order.deliveryDate"></td>
+                    <td x-text="order.contactEmail"></td>
+                    <td x-text="order.contactNumber"></td>
+                    <td x-text="order.totalPrice"></td>
+                    <td x-text="order.status || 'New'"></td>
+                    <td>
+                        <button @click="deleteOrder(order)">Delete</button>
+                        <button @click="paymentOrder(order)">Send payment details</button>
+                        <button @click="cancelOrder(order)">Cancel Order</button>
+                        <button @click="pendingOrder(order)">Pending Order</button>
+                        <button @click="productionOrder(order)">In Production</button>
+                        <button @click="deliverOrder(order)">Delivered Order</button>
+                    </td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+
+    <h2>Order History</h2>
+    <div x-show="!history.length" class="loading">Loading history...</div>
+    <table border="1" x-show="history.length">
+        <thead>
+            <tr>
+                <th>Order No</th>
+                <th>Item</th>
+                <th>Pattern</th>
+                <th>Quantity</th>
+                <th>Color</th>
+                <th>Size</th>
+                <th>Contact Name</th>
+                <th>Delivery Date</th>
+                <th>Contact Email</th>
+                <th>Contact Number</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Deleted/Cancelled On</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template x-for="order in history" :key="order.id">
+                <tr>
+                    <td x-text="order.cusNumber"></td>
+                    <td x-text="order.item"></td>
+                    <td x-text="order.pattern"></td>
+                    <td x-text="order.quantity"></td>
+                    <td x-text="order.color"></td>
+                    <td x-text="order.size"></td>
+                    <td x-text="order.contactName"></td>
+                    <td x-text="order.deliveryDate"></td>
+                    <td x-text="order.contactEmail"></td>
+                    <td x-text="order.contactNumber"></td>
+                    <td x-text="order.totalPrice"></td>
+                    <td x-text="order.status || 'Deleted'"></td>
+                    <td x-text="order.deletedOn || order.cancelledOn || new Date().toLocaleString()"></td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+
+    <div class="section">
+        <h2>Pending Orders</h2>
+        <div x-show="!pendingOrders.length" class="loading">No pending orders</div>
+        <table border="1" x-show="pendingOrders.length">
+            <thead>
+                <tr>
+                    <th>Order No</th>
+                    <th>Order Date</th>
+                    <th>Item</th>
+                    <th>Pattern</th>
+                    <th>Quantity</th>
+                    <th>Color</th>
+                    <th>Size</th>
+                    <th>Contact Name</th>
+                    <th>Delivery Date</th>
+                    <th>Contact Email</th>
+                    <th>Contact Number</th>
+                    <th>Total Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="order in pendingOrders" :key="order.id">
+                    <tr>
+                        <td x-text="order.cusNumber"></td>
+                        <td x-text="order.orderDate"></td>
+                        <td x-text="order.item"></td>
+                        <td x-text="order.pattern"></td>
+                        <td x-text="order.quantity"></td>
+                        <td x-text="order.color"></td>
+                        <td x-text="order.size"></td>
+                        <td x-text="order.contactName"></td>
+                        <td x-text="order.deliveryDate"></td>
+                        <td x-text="order.contactEmail"></td>
+                        <td x-text="order.contactNumber"></td>
+                        <td x-text="order.totalPrice"></td>
+                        <td>
+                            <button @click="productionOrder(order)">Move to Production</button>
+                            <button @click="paymentOrder(order)">Send Payment Details</button>
+                            <button @click="cancelOrder(order)">Cancel Order</button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
     </div>
 
-    <!-- Toast Notification -->
-    <div x-show="showToast" x-transition class="toast" x-text="toastMessage"></div>
-    
-    <script>
-        function adminOrders() {
-            return {
-                orders: [],
-                showToast: false,
-                toastMessage: '',
+    <div class="section">
+        <h2>Payment</h2>
+        <div x-show="!paymentOrders.length" class="loading">No orders awaiting payment</div>
+        <table border="1" x-show="paymentOrders.length">
+            <thead>
+                <tr>
+                    <th>Order No</th>
+                    <th>Order Date</th>
+                    <th>Item</th>
+                    <th>Pattern</th>
+                    <th>Quantity</th>
+                    <th>Color</th>
+                    <th>Size</th>
+                    <th>Contact Name</th>
+                    <th>Delivery Date</th>
+                    <th>Contact Email</th>
+                    <th>Contact Number</th>
+                    <th>Total Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="order in paymentOrders" :key="order.id">
+                    <tr>
+                        <td x-text="order.cusNumber"></td>
+                        <td x-text="order.orderDate"></td>
+                        <td x-text="order.item"></td>
+                        <td x-text="order.pattern"></td>
+                        <td x-text="order.quantity"></td>
+                        <td x-text="order.color"></td>
+                        <td x-text="order.size"></td>
+                        <td x-text="order.contactName"></td>
+                        <td x-text="order.deliveryDate"></td>
+                        <td x-text="order.contactEmail"></td>
+                        <td x-text="order.contactNumber"></td>
+                        <td x-text="order.totalPrice"></td>
+                        <td>
+                            <button @click="productionOrder(order)">Move to Production</button>
+                            <button @click="cancelOrder(order)">Cancel Order</button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
 
-                fetchOrders() {
-                    this.orders = JSON.parse(localStorage.getItem('adminOrders')) || [];
-                    console.log('🔹 Admin Loaded Orders:', this.orders);
-                },
+    <div class="section">
+        <h2>In Production</h2>
+        <div x-show="!productionOrders.length" class="loading">No orders in production</div>
+        <table border="1" x-show="productionOrders.length">
+            <thead>
+                <tr>
+                    <th>Order No</th>
+                    <th>Order Date</th>
+                    <th>Item</th>
+                    <th>Pattern</th>
+                    <th>Quantity</th>
+                    <th>Color</th>
+                    <th>Size</th>
+                    <th>Contact Name</th>
+                    <th>Delivery Date</th>
+                    <th>Contact Email</th>
+                    <th>Contact Number</th>
+                    <th>Total Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="order in productionOrders" :key="order.id">
+                    <tr>
+                        <td x-text="order.cusNumber"></td>
+                        <td x-text="order.orderDate"></td>
+                        <td x-text="order.item"></td>
+                        <td x-text="order.pattern"></td>
+                        <td x-text="order.quantity"></td>
+                        <td x-text="order.color"></td>
+                        <td x-text="order.size"></td>
+                        <td x-text="order.contactName"></td>
+                        <td x-text="order.deliveryDate"></td>
+                        <td x-text="order.contactEmail"></td>
+                        <td x-text="order.contactNumber"></td>
+                        <td x-text="order.totalPrice"></td>
+                        <td>
+                            <button @click="deliverOrder(order)">Mark as Delivered</button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
 
-                checkForNewOrders() {
-                    setInterval(() => {
-                        let updatedOrders = JSON.parse(localStorage.getItem('adminOrders')) || [];
-                        if (updatedOrders.length > this.orders.length) {
-                            this.orders = updatedOrders;
-                            this.showToastNotification("New order received!");
-                        }
-                    }, 2000); // Check every 2 seconds
-                },
-
-                showToastNotification(message) {
-                    this.toastMessage = message;
-                    this.showToast = true;
-                    setTimeout(() => this.showToast = false, 3000);
-                }
-            };
-        }
-    </script>
+    <div class="section">
+        <h2>Delivered Orders</h2>
+        <div x-show="!deliveredOrders.length" class="loading">No delivered orders</div>
+        <table border="1" x-show="deliveredOrders.length">
+            <thead>
+                <tr>
+                    <th>Order No</th>
+                    <th>Order Date</th>
+                    <th>Item</th>
+                    <th>Pattern</th>
+                    <th>Quantity</th>
+                    <th>Color</th>
+                    <th>Size</th>
+                    <th>Contact Name</th>
+                    <th>Delivery Date</th>
+                    <th>Contact Email</th>
+                    <th>Contact Number</th>
+                    <th>Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="order in deliveredOrders" :key="order.id">
+                    <tr>
+                        <td x-text="order.cusNumber"></td>
+                        <td x-text="order.orderDate"></td>
+                        <td x-text="order.item"></td>
+                        <td x-text="order.pattern"></td>
+                        <td x-text="order.quantity"></td>
+                        <td x-text="order.color"></td>
+                        <td x-text="order.size"></td>
+                        <td x-text="order.contactName"></td>
+                        <td x-text="order.deliveryDate"></td>
+                        <td x-text="order.contactEmail"></td>
+                        <td x-text="order.contactNumber"></td>
+                        <td x-text="order.totalPrice"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

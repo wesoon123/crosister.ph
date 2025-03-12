@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crosister | Costumize</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="costumize.js"></script>
-    <script src="server.js"></script>
+    <script type="module" src="costumize.js"></script>
+    <script type="module" src="firebase-config.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>emailjs.init("j17XET_AvuYGpKwjj"); </script>
 </head>
 <body x-data="{ openMenu: false }" :style="openMenu ? 'overflow: hidden;' : 'overflow:visible;'">
     <header>
@@ -50,83 +48,117 @@
                 </svg>
         </button>
     </div>
-   
       <main>
         <h1>Costumize your own design</h1>
-        <div class="customizer" x-data="customizer()">
-            <!-- Buttons -->
-            <div class="button-container">
-                <template x-for="(item, index) in items" :key="index">
-                    <button @click="openCustomizer(item)" x-text="item.name"></button>
-                </template>
+        <div class="customizer" x-data="customizer" x-cloak>  
+            <!-- Toast Notification -->  
+            <div x-cloak x-show="showToast" class="toast-overlay">
+                <div class="toast">
+                    <button class="toast-close" @click="closeToast()">✖</button>
+                    <div class="toast-icon">✔</div>
+                    <div class="toast-title">Success</div>
+                    <div class="toast-message" x-text="toastMessage"></div>
+                    <button class="toast-button" @click="closeToast()">OK</button>
+                </div>
             </div>
-        
-            <!-- Customization Form -->
-            <div x-show="selectedItem" class="customization-box" x-cloak>
-                <h2 class="font-bold" x-text="selectedItem ? 'Customize ' + selectedItem.name : 'Select an item'"></h2>
             
+            <!-- Buttons -->  
+            <div class="button-container">  
+                <template x-for="(item, index) in items" :key="index">  
+                    <button class="button-with-bg" @click="openCustomizer(item)" x-text="item.name" :style="'background-image: url(' + item.imagePath + ')'"></button>  
+                </template>  
+            </div>  
+        
+            <!-- Customization Form -->  
+            <div x-show="selectedItem" class="customization-box" x-cloak>  
+                <h2 class="font-bold" x-text="selectedItem ? 'Customize ' + selectedItem.name : 'Select an item'"></h2>  
+        
                 <label>Color:</label>
-                <select x-model="selectedColor" x-show="selectedItem">
-                    <template x-if="selectedItem">
-                        <template x-for="color in selectedItem.colors">
-                            <option x-text="color"></option>
-                        </template>
-                    </template>
-                </select>
-                <div class="color-preview" x-show="selectedItem" :style="{ backgroundColor: selectedColor || 'transparent' }"></div>
+                <div class="color-selection-container">
+                    <select x-model="selectedColor" @change="updateColorDisplay(); calculatePrice()">  
+                        <template x-if="selectedItem">  
+                            <template x-for="color in selectedItem.colors">  
+                                <option :value="color" x-text="getColorName(color)"></option>  
+                            </template>  
+                        </template>  
+                    </select>
+                    <div class="color-display-container">
+                        <div class="color-swatch" id="colorDisplay" :style="'background-image: url(' + item.imagePath + '); background-position: ' + (item.imagePosition || 'center center') + ';'"></div>
+                        <span x-text="getColorName(selectedColor)"></span>
+                    </div>
+                </div>
         
-                <!-- Size Option -->
-                <label>Size:</label>
-                <select x-model="selectedSize" x-show="selectedItem">
-                    <template x-if="selectedItem">
-                        <template x-for="size in selectedItem.sizes">
-                            <option x-text="size"></option>
-                        </template>
-                    </template>
-                </select>
+                <label>Size:</label>  
+                <select x-model="selectedSize" @change="calculatePrice()">  
+                    <template x-if="selectedItem">  
+                        <template x-for="size in selectedItem.sizes">  
+                            <option :value="size" x-text="size"></option>  
+                        </template>  
+                    </template>  
+                </select>  
         
-                <!-- Pattern Option -->
-                <label>Pattern:</label>
-                <select x-model="selectedPattern" x-show="selectedItem">
-                    <template x-if="selectedItem">
-                        <template x-for="pattern in selectedItem.patterns">
-                            <option x-text="pattern"></option>
-                        </template>
-                    </template>
-                </select>
-            
-                <!-- Quantity -->
-                <label>Quantity:</label>
-                <input type="number" x-model="quantity" min="1" class="input-box" required>
-                
-                <h2>Information and Delivery Address</h2>
+                <label>Pattern:</label>  
+                <select x-model="selectedPattern" @change="calculatePrice()">  
+                    <template x-if="selectedItem">  
+                        <template x-for="pattern in selectedItem.patterns">  
+                            <option :value="pattern" x-text="pattern"></option>  
+                        </template>  
+                    </template>  
+                </select>  
         
-                <!-- Name -->
-                <label>Full Name:</label>
-                <input type="text" x-model="contactName" class="input-box" required>
+                <label>Quantity:</label>  
+                <input type="number" x-model="quantity" min="1" @input="calculatePrice()" required>  
         
-                <label>Address:</label>
-                <input type="text" x-model="contactAddress" class="input-box" required>
+                <div class="price-calculator">
+                    <h3>Price Calculation</h3>
+                    <div class="price-breakdown">
+                        <div class="price-row">
+                            <span class="price-label">Base Price:</span>
+                            <span class="price-value" x-text="'₱' + formatNumber(basePrice)"></span>
+                        </div>
+                        <div class="price-row" x-show="sizePrice > 0">
+                            <span class="price-label">Size Addition:</span>
+                            <span class="price-value" x-text="'₱' + formatNumber(sizePrice)"></span>
+                        </div>
+                        <div class="price-row" x-show="patternPrice > 0">
+                            <span class="price-label">Pattern Addition:</span>
+                            <span class="price-value" x-text="'₱' + formatNumber(patternPrice)"></span>
+                        </div>
+                        <div class="price-row">
+                            <span class="price-label">Item Subtotal:</span>
+                            <span class="price-value" x-text="'₱' + formatNumber(itemSubtotal)"></span>
+                        </div>
+                        <div class="price-row">
+                            <span class="price-label">Quantity:</span>
+                            <span class="price-value" x-text="quantity"></span>
+                        </div>
+                        <div class="price-row total-row">
+                            <span class="price-label">Total Price:</span>
+                            <span class="price-value total-price" x-text="'₱' + formatNumber(totalPrice)"></span>
+                        </div>
+                    </div>
+                </div>
         
-                <!-- Contact Number -->
-                <label>Contact Number:</label>
-                <input type="text" x-model="contactNumber" class="input-box" required>
+                <h2>Information and Delivery Address</h2>  
         
-                <label>Email:</label>
-                <input type="text" x-model="contactEmail" class="input-box" required>
-            
-                <!-- Delivery Date (Auto-set to 1 week ahead) -->
-                <label>Delivery Date:</label>
-                <input type="date" x-model="cusdeliveryDate" :min="minDeliveryDate" class="input-box" required>
-            
-                <!-- Submit Button -->
-                <button @click="submitCustomization" class="submit-btn">Submit</button>
-            </div>
+                <label>Full Name:</label>  
+                <input type="text" x-model="contactName" required>  
         
-            <!-- Toast Notification -->
-            <div x-show="showToast" class="toast-notification" x-text="toastMessage" x-cloak></div>
-        </div>
+                <label>Address:</label>  
+                <input type="text" x-model="contactAddress" required>  
         
+                <label>Contact Number:</label>  
+                <input type="text" x-model="contactNumber" required>  
+        
+                <label>Email:</label>  
+                <input type="email" x-model="contactEmail" required>  
+        
+                <label>Delivery Date:</label>  
+                <input type="date" x-model="cusdeliveryDate" :min="minDeliveryDate" required>  
+        
+                <button @click="submitCustomization">Submit Order - ₱<span x-text="formatNumber(totalPrice)"></span></button>  
+            </div>   
+        </div> 
       </main>
       <footer>
         <h1>Crosister</h1>
