@@ -2,7 +2,7 @@ import { db, addDoc, collection } from "./firebase-config.js";
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('customizer', () => ({
-        items: [
+        item: [
             { 
                 name: 'Swimwear', 
                 colors: ['#fcec03', '#0366fc', '#03fc0b', '#fc5a03'], 
