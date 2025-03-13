@@ -64,7 +64,7 @@
             
             <!-- Buttons -->  
             <div class="button-container">  
-                <template x-for="(item, index) in items" :key="index">  
+                <template x-for="(item, index) in item" :key="index">  
                     <button class="button-with-bg" @click="openCustomizer(item)" x-text="item.name" :style="'background-image: url(' + item.imagePath + ')'"></button>  
                 </template>  
             </div>  
